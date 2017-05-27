@@ -1,25 +1,25 @@
 # 创建TLS证书和秘钥
 
-`kubernetes` 系统的各组件需要使用 `TLS` 证书对通信进行加密，本文档使用 `CloudFlare` 的 PKI 工具集 [cfssl](https://github.com/cloudflare/cfssl) 来生成 Certificate Authority (CA) 和其它证书；
+`kubernetes` 系统的各组件需要使用 `TLS` 证书对通信进行加密，本文档使用 `CloudFlare` 的 PKI 工具集 [cfssl](https://github.com/cloudflare/cfssl) 来生成 Certificate Authority \(CA\) 和其它证书；
 
 **生成的 CA 证书和秘钥文件如下：**
 
-+ ca-key.pem
-+ ca.pem
-+ kubernetes-key.pem
-+ kubernetes.pem
-+ kube-proxy.pem
-+ kube-proxy-key.pem
-+ admin.pem
-+ admin-key.pem
+* ca-key.pem
+* ca.pem
+* kubernetes-key.pem
+* kubernetes.pem
+* kube-proxy.pem
+* kube-proxy-key.pem
+* admin.pem
+* admin-key.pem
 
 **使用证书的组件如下：**
 
-+ etcd：使用 ca.pem、kubernetes-key.pem、kubernetes.pem；
-+ kube-apiserver：使用 ca.pem、kubernetes-key.pem、kubernetes.pem；
-+ kubelet：使用 ca.pem；
-+ kube-proxy：使用 ca.pem、kube-proxy-key.pem、kube-proxy.pem；
-+ kubectl：使用 ca.pem、admin-key.pem、admin.pem；
+* etcd：使用 ca.pem、kubernetes-key.pem、kubernetes.pem；
+* kube-apiserver：使用 ca.pem、kubernetes-key.pem、kubernetes.pem；
+* kubelet：使用 ca.pem；
+* kube-proxy：使用 ca.pem、kube-proxy-key.pem、kube-proxy.pem；
+* kubectl：使用 ca.pem、admin-key.pem、admin.pem；
 
 `kube-controller`、`kube-scheduler` 当前需要和 `kube-apiserver` 部署在同一台机器上且使用非安全端口通信，故不需要证书。
 
@@ -27,7 +27,7 @@
 
 **方式一：直接使用二进制源码包安装**
 
-``` bash
+```bash
 $ wget https://pkg.cfssl.org/R1.2/cfssl_linux-amd64
 $ chmod +x cfssl_linux-amd64
 $ sudo mv cfssl_linux-amd64 /root/local/bin/cfssl
@@ -59,15 +59,15 @@ cfssl cfssl-bundle cfssl-certinfo cfssljson cfssl-newkey cfssl-scan
 
 注意：以下文章中出现的cat的文件名如果不存在需要手工创建。
 
-## 创建 CA (Certificate Authority)
+## 创建 CA \(Certificate Authority\)
 
 **创建 CA 配置文件**
 
-``` bash
+```bash
 $ mkdir /root/ssl
 $ cd /root/ssl
-$ cfssl print-defaults config > config.json
-$ cfssl print-defaults csr > csr.json
+$ cfssl print-defaults config > ca-config.json
+$ cfssl print-defaults csr > ca-csr.json
 $ cat ca-config.json
 {
   "signing": {
@@ -88,16 +88,17 @@ $ cat ca-config.json
   }
 }
 ```
+
 字段说明
 
-+ `ca-config.json`：可以定义多个 profiles，分别指定不同的过期时间、使用场景等参数；后续在签名证书时使用某个 profile；
-+ `signing`：表示该证书可用于签名其它证书；生成的 ca.pem 证书中 `CA=TRUE`；
-+ `server auth`：表示client可以用该 CA 对server提供的证书进行验证；
-+ `client auth`：表示server可以用该CA对client提供的证书进行验证；
+* `ca-config.json`：可以定义多个 profiles，分别指定不同的过期时间、使用场景等参数；后续在签名证书时使用某个 profile；
+* `signing`：表示该证书可用于签名其它证书；生成的 ca.pem 证书中 `CA=TRUE`；
+* `server auth`：表示client可以用该 CA 对server提供的证书进行验证；
+* `client auth`：表示server可以用该CA对client提供的证书进行验证；
 
 **创建 CA 证书签名请求**
 
-``` bash
+```bash
 $ cat ca-csr.json
 {
   "CN": "kubernetes",
@@ -117,12 +118,12 @@ $ cat ca-csr.json
 }
 ```
 
-+ "CN"：`Common Name`，kube-apiserver 从证书中提取该字段作为请求的用户名 (User Name)；浏览器使用该字段验证网站是否合法；
-+ "O"：`Organization`，kube-apiserver 从证书中提取该字段作为请求用户所属的组 (Group)；
+* "CN"：`Common Name`，kube-apiserver 从证书中提取该字段作为请求的用户名 \(User Name\)；浏览器使用该字段验证网站是否合法；
+* "O"：`Organization`，kube-apiserver 从证书中提取该字段作为请求用户所属的组 \(Group\)；
 
 **生成 CA 证书和私钥**
 
-``` bash
+```bash
 $ cfssl gencert -initca ca-csr.json | cfssljson -bare ca
 $ ls ca*
 ca-config.json  ca.csr  ca-csr.json  ca-key.pem  ca.pem
@@ -132,7 +133,7 @@ ca-config.json  ca.csr  ca-csr.json  ca-key.pem  ca.pem
 
 创建 kubernetes 证书签名请求
 
-``` bash
+```bash
 $ cat kubernetes-csr.json
 {
     "CN": "kubernetes",
@@ -165,11 +166,11 @@ $ cat kubernetes-csr.json
 }
 ```
 
-+ 如果 hosts 字段不为空则需要指定授权使用该证书的 **IP 或域名列表**，由于该证书后续被 `etcd` 集群和 `kubernetes master` 集群使用，所以上面分别指定了 `etcd` 集群、`kubernetes master` 集群的主机 IP 和 **`kubernetes` 服务的服务 IP**（一般是 `kue-apiserver` 指定的 `service-cluster-ip-range` 网段的第一个IP，如 10.254.0.1。
+* 如果 hosts 字段不为空则需要指定授权使用该证书的 **IP 或域名列表**，由于该证书后续被 `etcd` 集群和 `kubernetes master` 集群使用，所以上面分别指定了 `etcd` 集群、`kubernetes master` 集群的主机 IP 和 `kubernetes`** 服务的服务 IP**（一般是 `kue-apiserver` 指定的 `service-cluster-ip-range` 网段的第一个IP，如 10.254.0.1。
 
 **生成 kubernetes 证书和私钥**
 
-``` bash
+```bash
 $ cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes kubernetes-csr.json | cfssljson -bare kubernetes
 $ ls kubernetes*
 kubernetes.csr  kubernetes-csr.json  kubernetes-key.pem  kubernetes.pem
@@ -177,7 +178,7 @@ kubernetes.csr  kubernetes-csr.json  kubernetes-key.pem  kubernetes.pem
 
 或者直接在命令行上指定相关参数：
 
-``` bash
+```bash
 $ echo '{"CN":"kubernetes","hosts":[""],"key":{"algo":"rsa","size":2048}}' | cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes -hostname="127.0.0.1,172.20.0.112,172.20.0.113,172.20.0.114,172.20.0.115,kubernetes,kubernetes.default" - | cfssljson -bare kubernetes
 ```
 
@@ -185,7 +186,7 @@ $ echo '{"CN":"kubernetes","hosts":[""],"key":{"algo":"rsa","size":2048}}' | cfs
 
 创建 admin 证书签名请求
 
-``` bash
+```bash
 $ cat admin-csr.json
 {
   "CN": "admin",
@@ -206,13 +207,13 @@ $ cat admin-csr.json
 }
 ```
 
-+ 后续 `kube-apiserver` 使用 `RBAC` 对客户端(如 `kubelet`、`kube-proxy`、`Pod`)请求进行授权；
-+ `kube-apiserver` 预定义了一些 `RBAC` 使用的 `RoleBindings`，如 `cluster-admin` 将 Group `system:masters` 与 Role `cluster-admin` 绑定，该 Role 授予了调用`kube-apiserver` 的**所有 API**的权限；
-+ OU 指定该证书的 Group 为 `system:masters`，`kubelet` 使用该证书访问 `kube-apiserver` 时 ，由于证书被 CA 签名，所以认证通过，同时由于证书用户组为经过预授权的 `system:masters`，所以被授予访问所有 API 的权限；
+* 后续 `kube-apiserver` 使用 `RBAC` 对客户端\(如 `kubelet`、`kube-proxy`、`Pod`\)请求进行授权；
+* `kube-apiserver` 预定义了一些 `RBAC` 使用的 `RoleBindings`，如 `cluster-admin` 将 Group `system:masters` 与 Role `cluster-admin` 绑定，该 Role 授予了调用`kube-apiserver` 的**所有 API**的权限；
+* OU 指定该证书的 Group 为 `system:masters`，`kubelet` 使用该证书访问 `kube-apiserver` 时 ，由于证书被 CA 签名，所以认证通过，同时由于证书用户组为经过预授权的 `system:masters`，所以被授予访问所有 API 的权限；
 
 生成 admin 证书和私钥
 
-``` bash
+```bash
 $ cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes admin-csr.json | cfssljson -bare admin
 $ ls admin*
 admin.csr  admin-csr.json  admin-key.pem  admin.pem
@@ -222,7 +223,7 @@ admin.csr  admin-csr.json  admin-key.pem  admin.pem
 
 创建 kube-proxy 证书签名请求
 
-``` bash
+```bash
 $ cat kube-proxy-csr.json
 {
   "CN": "system:kube-proxy",
@@ -243,12 +244,12 @@ $ cat kube-proxy-csr.json
 }
 ```
 
-+ CN 指定该证书的 User 为 `system:kube-proxy`；
-+ `kube-apiserver` 预定义的 RoleBinding `cluster-admin` 将User `system:kube-proxy` 与 Role `system:node-proxier` 绑定，该 Role 授予了调用 `kube-apiserver` Proxy 相关 API 的权限；
+* CN 指定该证书的 User 为 `system:kube-proxy`；
+* `kube-apiserver` 预定义的 RoleBinding `cluster-admin` 将User `system:kube-proxy` 与 Role `system:node-proxier` 绑定，该 Role 授予了调用 `kube-apiserver` Proxy 相关 API 的权限；
 
 生成 kube-proxy 客户端证书和私钥
 
-``` bash
+```bash
 $ cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes  kube-proxy-csr.json | cfssljson -bare kube-proxy
 $ ls kube-proxy*
 kube-proxy.csr  kube-proxy-csr.json  kube-proxy-key.pem  kube-proxy.pem
@@ -260,7 +261,7 @@ kube-proxy.csr  kube-proxy-csr.json  kube-proxy-key.pem  kube-proxy.pem
 
 ### 使用 `opsnssl` 命令
 
-``` bash
+```bash
 $ openssl x509  -noout -text -in  kubernetes.pem
 ...
     Signature Algorithm: sha256WithRSAEncryption
@@ -287,14 +288,14 @@ $ openssl x509  -noout -text -in  kubernetes.pem
 ...
 ```
 
-+ 确认 `Issuer` 字段的内容和 `ca-csr.json` 一致；
-+ 确认 `Subject` 字段的内容和 `kubernetes-csr.json` 一致；
-+ 确认 `X509v3 Subject Alternative Name` 字段的内容和 `kubernetes-csr.json` 一致；
-+ 确认 `X509v3 Key Usage、Extended Key Usage` 字段的内容和 `ca-config.json` 中 `kubernetes` profile 一致；
+* 确认 `Issuer` 字段的内容和 `ca-csr.json` 一致；
+* 确认 `Subject` 字段的内容和 `kubernetes-csr.json` 一致；
+* 确认 `X509v3 Subject Alternative Name` 字段的内容和 `kubernetes-csr.json` 一致；
+* 确认 `X509v3 Key Usage、Extended Key Usage` 字段的内容和 `ca-config.json` 中 `kubernetes` profile 一致；
 
 ### 使用 `cfssl-certinfo` 命令
 
-``` bash
+```bash
 $ cfssl-certinfo -cert kubernetes.pem
 ...
 {
@@ -351,14 +352,17 @@ $ cfssl-certinfo -cert kubernetes.pem
 
 将生成的证书和秘钥文件（后缀名为`.pem`）拷贝到所有机器的 `/etc/kubernetes/ssl` 目录下备用；
 
-``` bash
+```bash
 $ sudo mkdir -p /etc/kubernetes/ssl
 $ sudo cp *.pem /etc/kubernetes/ssl
 ```
 
 ## 参考
 
-+ [Generate self-signed certificates](https://coreos.com/os/docs/latest/generate-self-signed-certificates.html)
-+ [Setting up a Certificate Authority and Creating TLS Certificates](https://github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/02-certificate-authority.md)
-+ [Client Certificates V/s Server Certificates](https://blogs.msdn.microsoft.com/kaushal/2012/02/17/client-certificates-vs-server-certificates/)
-+ [数字证书及 CA 的扫盲介绍](http://blog.jobbole.com/104919/)
+* [Generate self-signed certificates](https://coreos.com/os/docs/latest/generate-self-signed-certificates.html)
+* [Setting up a Certificate Authority and Creating TLS Certificates](https://github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/02-certificate-authority.md)
+* [Client Certificates V/s Server Certificates](https://blogs.msdn.microsoft.com/kaushal/2012/02/17/client-certificates-vs-server-certificates/)
+* [数字证书及 CA 的扫盲介绍](http://blog.jobbole.com/104919/)
+
+
+
