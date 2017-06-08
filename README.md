@@ -1,6 +1,6 @@
 # Kubernetes Handbook
 
-[Kubernetes](http://kubernetes.io)是Google基于[Borg](https://research.google.com/pubs/pub43438.html)开源的容器编排调度引擎，作为[CNCF](http://cncf.io)（Cloud Native Computing Foundation）最重要的组件之一，它的目标不仅仅是一个编排系统，而是提供一个规范，可以让你来描述集群的架构，定义服务的最终状态，它将自动得将系统达到和维持在这个状态。
+[Kubernetes](http://kubernetes.io)是Google基于[Borg](https://research.google.com/pubs/pub43438.html)开源的容器编排调度引擎，作为[CNCF](http://cncf.io)（Cloud Native Computing Foundation）最重要的组件之一，它的目标不仅仅是一个编排系统，而是提供一个规范，可以让你来描述集群的架构，定义服务的最终状态，它将自动的将系统达到和维持在这个状态。
 
 本书记录了本人从零开始学习和使用Kubernetes的心路历程，着重于经验分享和总结，同时也会有相关的概念解析，希望能够帮助大家少踩坑，少走弯路。
 
@@ -8,9 +8,9 @@
 
 [文章目录](SUMMARY.md)
 
-GitHub地址：https://github.com/rootsongjc/kubernetes-handbook
+GitHub地址：[https://github.com/rootsongjc/kubernetes-handbook](https://github.com/rootsongjc/kubernetes-handbook)
 
-Gitbook在线浏览：https://www.gitbook.com/book/rootsongjc/kubernetes-handbook/
+Gitbook在线浏览：[https://www.gitbook.com/book/rootsongjc/kubernetes-handbook/](https://www.gitbook.com/book/rootsongjc/kubernetes-handbook/)
 
 ## 如何使用本书
 
@@ -25,14 +25,14 @@ Gitbook在线浏览：https://www.gitbook.com/book/rootsongjc/kubernetes-handboo
 1. 将代码克隆到本地
 2. 安装gitbook：[Setup and Installation of GitBook](https://github.com/GitbookIO/gitbook/blob/master/docs/setup.md)
 3. 执行gitbook serve
-4. 在浏览器中访问http://localhost:4000
+4. 在浏览器中访问[http://localhost:4000](http://localhost:4000)
 5. 生成的文档在`_book`目录下
 
 **生成pdf**
 
 [下载Calibre](http://calibre-ebook.com/download)
 
-- **On Mac**
+* **On Mac**
 
 在Mac下安装后，使用该命令创建链接
 
@@ -46,7 +46,7 @@ ln -s /Applications/calibre.app/Contents/MacOS/ebook-convert /usr/local/bin
 gitbook pdf . ./kubernetes-handbook.pdf
 ```
 
-- **On Windows**
+* **On Windows**
 
 需要用到的工具：[calibre](http://calibre-ebook.com/)，[phantomjs](http://phantomjs.org/download.html)
 
@@ -76,19 +76,20 @@ pandoc --latex-engine=xelatex --template=pm-template input.md -o output.pdf
 
 #### 文档的组织规则
 
-- 如果要创建一个大的主题就在最顶层创建一个目录；
-- 全书五大主题，每个主题一个目录，其下不再设二级目录；
-- 所有的图片都放在最顶层的`images`目录下，原则上文章中用到的图片都保存在本地；
-- 所有的文档的文件名使用英文命名，可以包含数字和中划线；
-- `etc`、`manifests`目录专门用来保存配置文件和文档中用到的其他相关文件；
+* 如果要创建一个大的主题就在最顶层创建一个目录；
+* 全书五大主题，每个主题一个目录，其下不再设二级目录；
+* 所有的图片都放在最顶层的`images`目录下，原则上文章中用到的图片都保存在本地；
+* 所有的文档的文件名使用英文命名，可以包含数字和中划线；
+* `etc`、`manifests`目录专门用来保存配置文件和文档中用到的其他相关文件；
 
 #### 添加文档
 
 1. 在该文章相关主题的目录下创建文档；
 2. 在`SUMMARY.md`中在相应的章节下添加文章链接；
-3. 执行`gitbook server`测试是否报错，访问 http://localhost:4000 查看该文档是否出现在相应主题的目录下；
+3. 执行`gitbook server`测试是否报错，访问 [http://localhost:4000](http://localhost:4000) 查看该文档是否出现在相应主题的目录下；
 4. 提交PR
 
 ## 关于
 
 [Jimmy Song](http://rootsongjc.github.io/about)
+
